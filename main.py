@@ -1,9 +1,9 @@
-from fastapi import FastAPI,UploadFile,Form,Response
-from fastapi.staticfiles import StaticFiles
+from fastapi import FastAPI,UploadFile,Form,Response # form이나 uploadfile, Response 사용하기 위해 import
+from fastapi.staticfiles import StaticFiles 
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from typing import Annotated
-import sqlite3
+import sqlite3 #sqllite를 사용하기 위해 import
 
 con=sqlite3.connect('data.db',check_same_thread=False)
 cur=con.cursor()
@@ -48,8 +48,7 @@ async def get_items():
                      """).fetchall()
     return JSONResponse(jsonable_encoder(dict(row) for row in rows))
 
-# 이미지 가죠오는 get
-# 수정
+# 이미지 가져오는 get
 @app.get('/images/{item_id}')
 async def get_image(item_id):
     cur=con.cursor()
@@ -59,7 +58,17 @@ async def get_image(item_id):
     return Response(content=bytes.fromhex(image_bytes), media_type="image/*")
 
 @app.post('/signup')
-def signup(id:Annotated[str,Form()],password:Annotated[str,Form()]):
+def signup(id:Annotated[str,Form()],
+           password:Annotated[str,Form()],
+           name:Annotated[str,Form()],
+           email:Annotated[str,Form()]):
+    cur.execute(f"""
+                INSERT INTO users(id,name,email,password)
+                VALUES('{id}','{name}','{email}','{password}')
+                """)
+    con.commit()
     print(id,password)
     return "200"
+
+
 app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
